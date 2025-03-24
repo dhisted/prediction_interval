@@ -102,7 +102,7 @@ test = [
 xgboost_prediction_interval = "xgboost_prediction_interval.cli:cli"
 
 [project.urls]
-repository = "https://github.com/dominic-histed/xgboost_prediction_interval"
+repository = "https://github.com/dhisted/prediction_interval"
 
 [tool.coverage.report]
 exclude_lines = [
