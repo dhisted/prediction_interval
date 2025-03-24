@@ -130,6 +130,7 @@ include = [
 
 [tool.hatch.version]
 source = "vcs"
+local_scheme = "no-local-version"
 
 [tool.mypy]
 disallow_untyped_defs = true
