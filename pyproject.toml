@@ -4,7 +4,7 @@ requires = ["hatchling", "hatch-vcs>=0.3", "setuptools-scm>=7.1"]
 
 [project]
 authors = [
-  {name = "Dominic Histed", email = "dominic.histed@allianz.com"}
+  {name = "Dominic Histed"}
 ]
 classifiers = [
   "Programming Language :: Python",
