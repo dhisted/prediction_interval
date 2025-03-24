@@ -1,0 +1,156 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling", "hatch-vcs>=0.3", "setuptools-scm>=7.1"]
+
+[project]
+authors = [
+  {name = "Dominic Histed", email = "dominic.histed@allianz.com"}
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+"arrow==1.3.0",
+"asttokens==3.0.0",
+"binaryornot==0.4.4",
+"certifi==2024.12.14",
+"chardet==5.2.0",
+"charset-normalizer==3.4.1",
+"click==8.1.8",
+"colorama==0.4.6",
+"comm==0.2.2",
+"contourpy==1.3.1",
+"cookiecutter==2.6.0",
+"cycler==0.12.1",
+"debugpy==1.8.11",
+"decorator==5.1.1",
+"executing==2.1.0",
+"fonttools==4.55.3",
+"idna==3.10",
+"ipykernel==6.29.5",
+"ipython==8.30.0",
+"jedi==0.19.2",
+"Jinja2==3.1.5",
+"joblib==1.4.2",
+"jupyter_client==8.6.3",
+"jupyter_core==5.7.2",
+"kiwisolver==1.4.8",
+"markdown-it-py==3.0.0",
+"MarkupSafe==3.0.2",
+"matplotlib==3.10.0",
+"matplotlib-inline==0.1.7",
+"mdurl==0.1.2",
+"nest-asyncio==1.6.0",
+"numpy==2.2.1",
+"packaging==24.2",
+"pandas==2.2.3",
+"parso==0.8.4",
+"pillow==11.1.0",
+"platformdirs==4.3.6",
+"prompt_toolkit==3.0.48",
+"psutil==6.1.0",
+"pure_eval==0.2.3",
+"Pygments==2.18.0",
+"pyparsing==3.2.1",
+"python-dateutil==2.9.0.post0",
+"python-slugify==8.0.4",
+"pytz==2024.2",
+"pywin32==308",
+"PyYAML==6.0.2",
+"pyzmq==26.2.0",
+"requests==2.32.3",
+"rich==13.9.4",
+"scikit-learn==1.6.1",
+"scipy==1.15.1",
+"seaborn==0.13.2",
+"setuptools==75.1.0",
+"six==1.17.0",
+"stack-data==0.6.3",
+"text-unidecode==1.3",
+"threadpoolctl==3.5.0",
+"tornado==6.4.2",
+"traitlets==5.14.3",
+"types-python-dateutil==2.9.0.20241206",
+"tzdata==2024.2",
+"urllib3==2.3.0",
+"wcwidth==0.2.13",
+"wheel==0.44.0",
+"xgboost==2.1.3",
+]
+description = "Create Prediction Intervals for XGBoost models using Quantile Regression and Conformalized Quantile Regression"
+dynamic = ["version"]
+license = {text = "MIT"}
+name = "xgboost_prediction_interval"
+readme = "README.rst"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-cov",
+  "mypy"
+]
+
+[project.scripts]
+xgboost_prediction_interval = "xgboost_prediction_interval.cli:cli"
+
+[project.urls]
+repository = "https://github.com/dominic-histed/xgboost_prediction_interval"
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  # This covers both typing.TYPE_CHECKING and plain TYPE_CHECKING, with any amount of whitespace
+  "if\\s+(typing\\.)?TYPE_CHECKING:",
+  'if __name__ == "__main__":'
+]
+omit = [
+  "src/xgboost_prediction_interval/__main__.py",
+  "src/xgboost_prediction_interval/_version.py",
+  "tests/*"
+]
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/xgboost_prediction_interval/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/xgboost_prediction_interval",
+  "/pyproject.toml"
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.mypy]
+disallow_untyped_defs = true
+files = ["src/xgboost_prediction_interval/**/*.py"]
+python_version = "3.9"
+warn_no_return = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "-vv",
+  "--color=yes",
+  "--cov-append",
+  "--cov-branch",
+  "--cov-report=term-missing",
+  "--cov=xgboost_prediction_interval",
+  "--tb=native",
+  "--strict-markers",
+  "--durations=20"
+]
+markers = [
+  "serial: execute test serially (to avoid race conditions)",
+  "slow: tests can take a long time (deselect with '-m \"not slow\"')"
+]
+norecursedirs = [".*", "*.egg*", "build", "dist", "conda.recipe", "examples", "env", "envs", "scripts"]
