@@ -85,11 +85,11 @@ dependencies = [
   "wheel>=0.44.0",
   "xgboost==3.0.0",  # Updated for Python 3.13 compatibility
 ]
-description = "Create Prediction Intervals for XGBoost models using Quantile Regression and Conformalized Quantile Regression"
+description = "Create Prediction Intervals such as Quantile Regression, Conformalized Quantile Regression, and bootstrapping using XGBoost"
 dynamic = ["version"]
 license = {text = "MIT"}
-name = "xgboost_prediction_interval"
-readme = "README.rst"
+name = "prediction_interval"
+readme = "README.md"
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
