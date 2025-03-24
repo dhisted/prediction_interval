@@ -1,8 +1,16 @@
-to convert this jupyter file to markdown for README.md use: jupyter nbconvert --to markdown README.ipynb
 
 Based off the work done here:
 - CQR: https://arxiv.org/abs/1905.03222
 - CQR: poster concise explanation: https://github.com/yromano/cqr/blob/master/poster/CQR_Poster.pdf
+
+### macOS users install `libomp` before running the project:
+```bash
+brew install libomp
+
+
+```python
+%pip install xgboost_prediction_interval
+```
 
 
 ```python
@@ -63,7 +71,7 @@ print(df.shape)
     3  39.096159  
     4  33.427409  
     (1000, 8)
-    
+
 
 ##### To import data saved locally uncomment the following and add full path to dataset in place of path_to_file...
 
@@ -147,7 +155,7 @@ lower_qr_quantile, upper_qr_quantile, conformity_score = cqr_xgboost.cqr_grid_se
     6      0.4      0.6  2.249834e-12     0.976         16.465689
     7      0.4      0.8  3.815250e-12     0.960         15.331766
     8      0.4      0.9  4.629115e-12     0.952         16.430967
-    
+
 
 ##### The output identifies the best quantile values for the quantile regression portion of the prediction interval (0.4 and 0.6)
 - despite the quantile levels giving a prediction interval width of 0.6-0.4 = 0.2 the overall PI will still have a width of 0.9 due to the alpha defined at the start
@@ -167,7 +175,7 @@ cqr_xgboost.fit(
 ```
 
     Evaluating --- Lower QR quantile: 0.4 --- Upper QR quantile 0.6 --- CQR alpha 0.9
-    
+
 
 
 ```python
@@ -175,9 +183,9 @@ cqr_preds = cqr_xgboost.predict(X_test)
 cqr_preds
 ```
 
-    {'model_40': <xgboost.core.Booster object at 0x000001BF2728A8D0>, 'model_60': <xgboost.core.Booster object at 0x000001BF27289FD0>}
+    {'model_40': <xgboost.core.Booster object at 0x000001A4BE092630>, 'model_60': <xgboost.core.Booster object at 0x000001A4BE091F40>}
     (np.float64(6.691801754053905), np.float64(6.691801754053905))
-    
+
 
 
 
@@ -307,14 +315,14 @@ print(f"symmetric cwc {cqr_xgboost.cwc(0.9, y_test, lower_quantile_preds, upper_
 
 
     
-![png](README_files/README_18_0.png)
+![png](README_files/README_20_0.png)
     
 
 
     symmetric coverage 0.96
     symmetric average_width 15.935728073120117
     symmetric cwc 3.719721652657278e-12
-    
+
 
 ### Also have the option for an asymmetric loss function which optimises the upper and lower quantiles separately
 
@@ -359,7 +367,7 @@ lower_qr_quantile, upper_qr_quantile, conformity_score = cqr_xgboost.cqr_grid_se
     6      0.4      0.6  4.770299e-12     0.952         15.728806
     7      0.4      0.8  3.616456e-12     0.960         16.588610
     8      0.4      0.9  6.010613e-12     0.944         15.938600
-    
+
 
 The Output for Grid Search shows key metrics (Coverage-Width Criterion, Coverage, average PI width) - best alphas recommended based on lowest CWC which changes based on arbitrary choice of eta parameter in CWC formula (higher eta favours high coverage => wider PIs, lower eta favours narrow PIs => lower coverage) thus for best results experiment with different values of eta or use the full output to also compare coverage and PI width when settling on lower and upper quantile levels. The balance of coverage and PI width will vary based on application
 
@@ -389,20 +397,20 @@ print(f"asymmetric cwc {asymmetric_cqr_xgboost.cwc(0.9, y_test, asym_lower_quant
 ```
 
     Evaluating --- Lower QR quantile: 0.4 --- Upper QR quantile 0.6 --- CQR alpha 0.9
-    {'model_40': <xgboost.core.Booster object at 0x000001BF2839FAD0>, 'model_60': <xgboost.core.Booster object at 0x000001BF2839C140>}
+    {'model_40': <xgboost.core.Booster object at 0x000001A4DA37B290>, 'model_60': <xgboost.core.Booster object at 0x000001A4DA3794F0>}
     (np.float64(6.199072327530171), np.float64(7.433534967125333))
-    
 
 
+
     
-![png](README_files/README_22_1.png)
+![png](README_files/README_24_1.png)
     
 
 
     asymmetric coverage 0.96
     asymmetric average_width 15.902301788330078
     asymmetric cwc 3.725008720146514e-12
-    
+
 
 Results in a marginally lower coverage probability but a narrower average PI width
 
@@ -431,23 +439,23 @@ print(f"asymmetric cwc {asymmetric_cqr_xgboost.cwc(0.9, y_test, lower_qr_preds, 
 
 
     
-![png](README_files/README_25_0.png)
+![png](README_files/README_27_0.png)
     
 
 
     asymmetric coverage 0.888
     asymmetric average_width 14.869775772094727
     asymmetric cwc 3.3716176135545774e-11
-    
+
 
 
 ```python
 bootstrap = XGBoostBootstrap(
     model_params={},
     num_boost_round=int(100),
-    alpha=0.98  # coverage probability for the conformal prediction part of CQR - should be set to your final desired coverage level
+    alpha=0.98
     )
-bootstrap.fit(X_train, y_train, n_bootstrap=10)
+bootstrap.fit(X_train, y_train, n_bootstrap=100, sample_size_ratio=0.7)
 bs_preds = bootstrap.predict(X_test)
 # access the lower and upper prediction interval values for the X_test data
 lower_qr_preds = bs_preds["model_1_predictions"]
@@ -462,29 +470,140 @@ print(f"Bootstrap average_width {bootstrap.average_width(lower_qr_preds, upper_q
 print(f"Bootstrap cwc {bootstrap.cwc(0.9, y_test, lower_qr_preds, upper_qr_preds)}")
 ```
 
-    ----- Training model 1 / 10 -----
-    ----- Training model 2 / 10 -----
-    ----- Training model 3 / 10 -----
-    ----- Training model 4 / 10 -----
-    ----- Training model 5 / 10 -----
-    ----- Training model 6 / 10 -----
-    ----- Training model 7 / 10 -----
-    ----- Training model 8 / 10 -----
-    ----- Training model 9 / 10 -----
-    ----- Training model 10 / 10 -----
+    ----- Training model 1 / 100 -----
+    ----- Training model 2 / 100 -----
+    ----- Training model 3 / 100 -----
+    ----- Training model 4 / 100 -----
+    ----- Training model 5 / 100 -----
+    ----- Training model 6 / 100 -----
+    ----- Training model 7 / 100 -----
+    ----- Training model 8 / 100 -----
+    ----- Training model 9 / 100 -----
+    ----- Training model 10 / 100 -----
+    ----- Training model 11 / 100 -----
+    ----- Training model 12 / 100 -----
+    ----- Training model 13 / 100 -----
+    ----- Training model 14 / 100 -----
+    ----- Training model 15 / 100 -----
+    ----- Training model 16 / 100 -----
+    ----- Training model 17 / 100 -----
+    ----- Training model 18 / 100 -----
+    ----- Training model 19 / 100 -----
+    ----- Training model 20 / 100 -----
+    ----- Training model 21 / 100 -----
+    ----- Training model 22 / 100 -----
+    ----- Training model 23 / 100 -----
+    ----- Training model 24 / 100 -----
+    ----- Training model 25 / 100 -----
+    ----- Training model 26 / 100 -----
+    ----- Training model 27 / 100 -----
+    ----- Training model 28 / 100 -----
+    ----- Training model 29 / 100 -----
+    ----- Training model 30 / 100 -----
+    ----- Training model 31 / 100 -----
+    ----- Training model 32 / 100 -----
+    ----- Training model 33 / 100 -----
+    ----- Training model 34 / 100 -----
+    ----- Training model 35 / 100 -----
+    ----- Training model 36 / 100 -----
+    ----- Training model 37 / 100 -----
+    ----- Training model 38 / 100 -----
+    ----- Training model 39 / 100 -----
+    ----- Training model 40 / 100 -----
+    ----- Training model 41 / 100 -----
+    ----- Training model 42 / 100 -----
+    ----- Training model 43 / 100 -----
+    ----- Training model 44 / 100 -----
+    ----- Training model 45 / 100 -----
+    ----- Training model 46 / 100 -----
+    ----- Training model 47 / 100 -----
+    ----- Training model 48 / 100 -----
+    ----- Training model 49 / 100 -----
+    ----- Training model 50 / 100 -----
+    ----- Training model 51 / 100 -----
+    ----- Training model 52 / 100 -----
+    ----- Training model 53 / 100 -----
+    ----- Training model 54 / 100 -----
+    ----- Training model 55 / 100 -----
+    ----- Training model 56 / 100 -----
+    ----- Training model 57 / 100 -----
+    ----- Training model 58 / 100 -----
+    ----- Training model 59 / 100 -----
+    ----- Training model 60 / 100 -----
+    ----- Training model 61 / 100 -----
+    ----- Training model 62 / 100 -----
+    ----- Training model 63 / 100 -----
+    ----- Training model 64 / 100 -----
+    ----- Training model 65 / 100 -----
+    ----- Training model 66 / 100 -----
+    ----- Training model 67 / 100 -----
+    ----- Training model 68 / 100 -----
+    ----- Training model 69 / 100 -----
+    ----- Training model 70 / 100 -----
+    ----- Training model 71 / 100 -----
+    ----- Training model 72 / 100 -----
+    ----- Training model 73 / 100 -----
+    ----- Training model 74 / 100 -----
+    ----- Training model 75 / 100 -----
+    ----- Training model 76 / 100 -----
+    ----- Training model 77 / 100 -----
+    ----- Training model 78 / 100 -----
+    ----- Training model 79 / 100 -----
+    ----- Training model 80 / 100 -----
+    ----- Training model 81 / 100 -----
+    ----- Training model 82 / 100 -----
+    ----- Training model 83 / 100 -----
+    ----- Training model 84 / 100 -----
+    ----- Training model 85 / 100 -----
+    ----- Training model 86 / 100 -----
+    ----- Training model 87 / 100 -----
+    ----- Training model 88 / 100 -----
+    ----- Training model 89 / 100 -----
+    ----- Training model 90 / 100 -----
+    ----- Training model 91 / 100 -----
+    ----- Training model 92 / 100 -----
+    ----- Training model 93 / 100 -----
+    ----- Training model 94 / 100 -----
+    ----- Training model 95 / 100 -----
+    ----- Training model 96 / 100 -----
+    ----- Training model 97 / 100 -----
+    ----- Training model 98 / 100 -----
+    ----- Training model 99 / 100 -----
+    ----- Training model 100 / 100 -----
+
+
+
+    
+![png](README_files/README_28_1.png)
     
 
 
-    
-![png](README_files/README_26_1.png)
-    
+    Bootstrap coverage 0.896
+    Bootstrap average_width 7.640153408050537
+    Bootstrap cwc 3.4321849985369016e-11
 
-
-    asymmetric coverage 0.72
-    asymmetric average_width 5.027063369750977
-    asymmetric cwc 7.293376294033433e-09
-    
 
 Bootstrap undercovers with the default parameters - introducing randomness via XGBoosts hyperparameters (subsample, colsample_bytree, colsample_bylevel  , ...) may reduce this effect
 
+
+```python
+bootstrap.plot_pi_line_graph(y_test, lower_qr_preds, upper_qr_preds, X_test["Feature1"])
+```
+
+
+    
+![png](README_files/README_30_0.png)
+    
+
+
 ###
+
+
+```python
+bootstrap.plot_coverage_probability_binned(y_test, lower_qr_preds, upper_qr_preds, x=X_test["Feature1"])
+```
+
+
+```python
+bootstrap.plot_pi_width(lower_qr_preds, upper_qr_preds, x=X_test["Feature1"])
+```
