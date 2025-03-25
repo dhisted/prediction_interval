@@ -6,7 +6,6 @@ from sklearn.utils import resample
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.neighbors import KernelDensity
 import pickle
 
 class PredictionIntervalResults:
