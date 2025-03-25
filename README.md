@@ -17,7 +17,7 @@ brew install libomp
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from prediction_interval import XGBoostCQR, XGBoostQuantileRegressor, XGBoostBootstrap
+from prediction_interval.models import XGBoostCQR, XGBoostQuantileRegressor, XGBoostBootstrap
 ```
 
 # Demo of how to use package:
