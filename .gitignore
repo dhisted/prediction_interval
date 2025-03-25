@@ -62,7 +62,7 @@ target/
 .python-version
 
 # hatch-vcs version file
-src/xgboost_prediction_interval/_version.py
+src/prediction_interval/_version.py
 
 # Environments
 .env

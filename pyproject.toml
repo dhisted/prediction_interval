@@ -99,7 +99,7 @@ test = [
   "mypy"
 ]
 [project.scripts]
-xgboost_prediction_interval = "xgboost_prediction_interval.cli:cli"
+prediction_interval = "prediction_interval.cli:cli"
 
 [project.urls]
 repository = "https://github.com/dhisted/prediction_interval"
@@ -111,8 +111,8 @@ exclude_lines = [
   'if __name__ == "__main__":'
 ]
 omit = [
-  "src/xgboost_prediction_interval/__main__.py",
-  "src/xgboost_prediction_interval/_version.py",
+  "src/prediction_interval/__main__.py",
+  "src/prediction_interval/_version.py",
   "tests/*"
 ]
 
@@ -120,11 +120,11 @@ omit = [
 universal = true
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/xgboost_prediction_interval/_version.py"
+version-file = "src/prediction_interval/_version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "/src/xgboost_prediction_interval",
+  "/src/prediction_interval",
   "/pyproject.toml"
 ]
 
@@ -134,7 +134,7 @@ local_scheme = "no-local-version"
 
 [tool.mypy]
 disallow_untyped_defs = true
-files = ["src/xgboost_prediction_interval/**/*.py"]
+files = ["src/prediction_interval/**/*.py"]
 python_version = "3.9"
 warn_no_return = true
 
@@ -145,7 +145,7 @@ addopts = [
   "--cov-append",
   "--cov-branch",
   "--cov-report=term-missing",
-  "--cov=xgboost_prediction_interval",
+  "--cov=prediction_interval",
   "--tb=native",
   "--strict-markers",
   "--durations=20"

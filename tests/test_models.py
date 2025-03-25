@@ -1,4 +1,4 @@
-from src.xgboost_prediction_interval.models import XGBoostQuantileRegressor, XGBoostCQR
+from src.prediction_interval.models import XGBoostQuantileRegressor, XGBoostCQR
 import pytest
 import numpy as np
 import xgboost as xgb

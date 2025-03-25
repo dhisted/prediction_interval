@@ -3,7 +3,7 @@
 {% set project = pyproject['project'] %}
 
 package:
-  name: xgboost-prediction-interval
+  name: prediction-interval
   version: {{ version }}
 
 source:
@@ -41,7 +41,7 @@ requirements:
 
 test:
   imports:
-    - xgboost_prediction_interval
+    - prediction_interval
   source_files:
     - tests
   requires:
@@ -53,10 +53,10 @@ test:
     {% for name in project['scripts'] %}
     - {{ name }}
     {% endfor %}
-    - python -c "from xgboost_prediction_interval import __version__; assert __version__ == \"{{ version }}\""
+    - python -c "from prediction_interval import __version__; assert __version__ == \"{{ version }}\""
 
 about:
-  home: https://github.com/dominic-histed/xgboost_prediction_interval
+  home: https://github.com/dominic-histed/prediction_interval
   summary: Create Prediction Intervals for XGBoost models using Quantile Regression and Conformalized Quantile Regression
   license: {{ pyproject.get('license') }}
   license_file: LICENSE

@@ -1,5 +1,5 @@
 try:
-    from xgboost_prediction_interval._version import version as __version__
+    from prediction_interval._version import version as __version__
 except ImportError:  # pragma: no cover
     __version__ = "unknown"
 
@@ -14,7 +14,7 @@ from .models import ModelA, ModelB: This imports ModelA and ModelB from the mode
 __all__ = ["ModelA", "ModelB"]: This defines the public API of your package. By listing ModelA and ModelB in __all__, you make them directly accessible when someone imports your package.
 With this setup, users can import your classes directly from the package, like so:
 
-from xgboost_prediction_interval import ModelA, ModelB
+from prediction_interval import ModelA, ModelB
 
 model_a = ModelA()
 model_b = ModelB()

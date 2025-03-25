@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from typing import Optional, Sequence
-from xgboost_prediction_interval import __version__
+from prediction_interval import __version__
 
 
 def cli(args: Optional[Sequence[str]] = None) -> None:
@@ -10,7 +10,7 @@ def cli(args: Optional[Sequence[str]] = None) -> None:
         "--version",
         action="version",
         help="Show the conda-prefix-replacement version number and exit.",
-        version="xgboost_prediction_interval %s" % __version__,
+        version="prediction_interval %s" % __version__,
     )
 
     parsed, unknown = p.parse_known_args(args)

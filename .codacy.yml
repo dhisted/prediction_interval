@@ -1,6 +1,6 @@
 ---
 exclude_paths:
-  - 'xgboost_prediction_interval/_version.py'
+  - 'prediction_interval/_version.py'
   - 'tests/**/*'
   - 'tests/*'
   - 'benchmarks/**/*'
