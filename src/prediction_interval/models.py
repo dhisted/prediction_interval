@@ -807,6 +807,7 @@ class XGBoostBootstrap(PredictionIntervalResults):
         n_samples = int(X_train.shape[0] * sample_size_ratio)
 
         for i in range(n_bootstrap):
+            print(f"----- Training model {i+1} / {n_bootstrap} -----")
             if self.method == "bootstrap":
                 indices = resample(range(len(X_train)), n_samples=n_samples, replace=True)
                 X_resampled = X_train.iloc[indices]
