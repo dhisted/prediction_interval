@@ -714,6 +714,33 @@ class XGBoostCQR(XGBoostQuantileRegressor):
         print(self.conformity_score)
         return model_predictions
 
+    def save(self, filepath):
+        """Saves the model, conformity scores, and relevant metadata."""
+        with open(filepath, 'wb') as f:
+            pickle.dump({
+                "models": {name: model.save_raw() for name, model in self.models.items()},
+                "conformity_score": self.conformity_score,
+                "lower_qr_quantile": self.lower_qr_quantile,
+                "upper_qr_quantile": self.upper_qr_quantile,
+                "alpha": self.alpha
+            }, f)
+        print(f"Model saved to {filepath}")
+ 
+    def load(self, filepath):
+        """Loads the model, conformity scores, and relevant metadata."""
+        with open(filepath, 'rb') as f:
+            data = pickle.load(f)
+            self.conformity_score = data["conformity_score"]
+            self.lower_qr_quantile = data["lower_qr_quantile"]
+            self.upper_qr_quantile = data["upper_qr_quantile"]
+            self.alpha = data["alpha"]
+            self.models = {}
+            for name, raw_model in data["models"].items():
+                booster = xgb.Booster()
+                booster.load_model(raw_model)
+                self.models[name] = booster
+        print(f"Model loaded from {filepath}")
+
 
 class XGBoostBootstrap(PredictionIntervalResults):
     def __init__(self, model_params:dict, num_boost_round=100, method="bootstrap", alpha=90) -> None:
