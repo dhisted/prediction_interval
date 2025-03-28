@@ -776,7 +776,10 @@ class XGBoostBootstrap(PredictionIntervalResults):
         self.monte_carlo_models_list = []  # Store MC ensemble models
 
 
-    def fit(self, X_train: pd.DataFrame, y_train: pd.Series, n_bootstrap: int = 100, sample_size_ratio: float = 1.0):
+    def fit(self, X_train: pd.DataFrame, y_train: pd.Series, 
+            n_bootstrap: int = 100, sample_size_ratio: float = 1.0,
+            early_stopping_rounds: int = None, eval_set: tuple = None,
+            verbose_eval: bool = False):
         """
         Trains multiple models using either the bootstrap resampling or Monte Carlo method.
         For Monte Carlo ensure subsample, colsample_bytree, colsample_bylevel are not 1 to ensure there is randomness between models in ensemble
@@ -786,32 +789,48 @@ class XGBoostBootstrap(PredictionIntervalResults):
             sample_size_ratio: FOR BOOSTRAPPING - The proportion of the dataset used for each resampled dataset (default is 1.0, meaning the full dataset is used).
             X_train : array-like, Training data features.
             y_train : array-like 1-D, Training data targets.
+        early_stopping_rounds : int, optional
+            Activates early stopping. Validation metric needs to improve at least once 
+            in every early_stopping_rounds round(s). Default None.
+        eval_set : tuple, optional
+            (X_val, y_val) for early stopping. Required if early_stopping_rounds is set.
+        verbose_eval : bool or int, optional
+            Whether to display early stopping progress. Default False.
         """
+
+        if early_stopping_rounds is not None and eval_set is None:
+            raise ValueError("eval_set must be provided when using early_stopping_rounds")
+            
+        self.early_stopping_rounds = early_stopping_rounds
         self.bootstrap_models_list = []
         self.monte_carlo_models_list = []
-
-
         n_samples = int(X_train.shape[0] * sample_size_ratio)
 
         for i in range(n_bootstrap):
-            print(f"----- Training model {i+1} / {n_bootstrap} -----")
-
             if self.method == "bootstrap":
                 indices = resample(range(len(X_train)), n_samples=n_samples, replace=True)
                 X_resampled = X_train.iloc[indices]
                 y_resampled = y_train.iloc[indices]
-
             elif self.method == "monte_carlo":
                 X_resampled = X_train
                 y_resampled = y_train
             else:
-                raise ValueError("Method must be 'bootstrap' or 'monte_carlo'.")
+                raise ValueError("Method must be 'bootstrap' or 'monte_carlo'")
 
-            model = xgb.train(params=self.model_params, 
-                              dtrain=xgb.DMatrix(X_resampled, label=y_resampled), 
-                              num_boost_round=self.num_boost_round, 
-                              verbose_eval=0)
+            # Setup evaluation data if using early stopping
+            evals = []
+            if early_stopping_rounds is not None:
+                evals = [(xgb.DMatrix(*eval_set), "eval")]
             
+            model = xgb.train(
+                params=self.model_params,
+                dtrain=xgb.DMatrix(X_resampled, label=y_resampled),
+                num_boost_round=self.num_boost_round,
+                evals=evals,
+                early_stopping_rounds=early_stopping_rounds,
+                verbose_eval=verbose_eval
+            )
+
             if self.method == "bootstrap":
                 self.bootstrap_models_list.append(model)
             else:
@@ -863,6 +882,7 @@ class XGBoostBootstrap(PredictionIntervalResults):
                 "alpha": self.alpha,
                 "model_params": self.model_params,
                 "num_boost_round": self.num_boost_round,
+                "early_stopping_rounds": self.early_stopping_rounds,
                 "bootstrap_models": bootstrap_raw,
                 "monte_carlo_models": monte_carlo_raw
             }, f)
@@ -872,11 +892,12 @@ class XGBoostBootstrap(PredictionIntervalResults):
         """Loads the model and relevant metadata."""
         with open(filepath, "rb") as f:
             data = pickle.load(f)
-            self.model_params = data["model_params"]
-            self.num_boost_round = data["num_boost_round"]
+            self.model_params = data.get("model_params", {})
+            self.num_boost_round = data.get("num_boost_round", 100)
+            self.early_stopping_rounds = data.get("early_stopping_rounds")
             self.method = data["method"]
             self.alpha = data["alpha"]
-            
+
             self.bootstrap_models_list = []
             if data["bootstrap_models"]:
                 for raw_model in data["bootstrap_models"]:
