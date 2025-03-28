@@ -430,8 +430,7 @@ class XGBoostQuantileRegressor(PredictionIntervalResults):
         with open(filepath, "wb") as f:
             pickle.dump({
                 "models": {name: model.save_raw() for name, model in self.models.items()},
-                "lower_qr_quantile": self.lower_qr_quantile,
-                "upper_qr_quantile": self.upper_qr_quantile,
+                "quantiles": self.quantiles,
                 "alpha": self.alpha,
                 "model_params": self.model_params,
                 "num_boost_round": self.num_boost_round,
@@ -443,8 +442,7 @@ class XGBoostQuantileRegressor(PredictionIntervalResults):
         """Loads the model, conformity scores, and relevant metadata."""
         with open(filepath, "rb") as f:
             data = pickle.load(f)
-            self.lower_qr_quantile = data["lower_qr_quantile"]
-            self.upper_qr_quantile = data["upper_qr_quantile"]
+            self.quantiles = data["quantiles"]
             self.alpha = data["alpha"]
             self.model_params = data.get("model_params", {})
             self.num_boost_round = data.get("num_boost_round", 100)
