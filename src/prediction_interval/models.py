@@ -318,7 +318,7 @@ class XGBoostQuantileRegressor(PredictionIntervalResults):
         Calculates the Coverage Width Criterion (CWC).
     """
 
-    def __init__(self, model_params: dict, num_boost_round=100, quantiles=np.array([0.05, 0.95]), early_stopping_rounds=None):
+    def __init__(self, model_params: dict=None, num_boost_round=100, quantiles=np.array([0.05, 0.95]), early_stopping_rounds=None):
         """
         Initializes the XGBoostQuantileRegressor with the given parameters.
         Parameters:
@@ -332,7 +332,7 @@ class XGBoostQuantileRegressor(PredictionIntervalResults):
         early_stopping_rounds : int or None, optional
             Number of rounds for early stopping (default is None).
         """
-        self.model_params = model_params
+        self.model_params = model_params if model_params is not None else {}
         self.num_boost_round = num_boost_round
         self.quantiles = quantiles
         self.early_stopping_rounds = early_stopping_rounds
@@ -427,22 +427,28 @@ class XGBoostQuantileRegressor(PredictionIntervalResults):
 
     def save(self, filepath):
         """Saves the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             pickle.dump({
                 "models": {name: model.save_raw() for name, model in self.models.items()},
                 "lower_qr_quantile": self.lower_qr_quantile,
                 "upper_qr_quantile": self.upper_qr_quantile,
-                "alpha": self.alpha
+                "alpha": self.alpha,
+                "model_params": self.model_params,
+                "num_boost_round": self.num_boost_round,
+                "early_stopping_rounds": self.early_stopping_rounds
             }, f)
         print(f"Model saved to {filepath}")
 
     def load(self, filepath):
         """Loads the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             data = pickle.load(f)
             self.lower_qr_quantile = data["lower_qr_quantile"]
             self.upper_qr_quantile = data["upper_qr_quantile"]
             self.alpha = data["alpha"]
+            self.model_params = data.get("model_params", {})
+            self.num_boost_round = data.get("num_boost_round", 100)
+            self.early_stopping_rounds = data.get("early_stopping_rounds")
             self.models = {}
             for name, raw_model in data["models"].items():
                 booster = xgb.Booster()
@@ -475,7 +481,7 @@ class XGBoostCQR(XGBoostQuantileRegressor):
         Predicts using the CQR model.
     """
 
-    def __init__(self, model_params: dict, num_boost_round=100, early_stopping_rounds=None, alpha=0.90):
+    def __init__(self, model_params: dict=None, num_boost_round=100, early_stopping_rounds=None, alpha=0.90):
         """
         Initializes the XGBoostCQR with the given parameters.
         Parameters:
@@ -598,6 +604,8 @@ class XGBoostCQR(XGBoostQuantileRegressor):
         get_conformity_score = self.symmetric_conformity_score if conformity_score_method == "symmetric" else self.asymmetric_conformity_score
         best_cwc = np.inf
         best_conformity = None
+        best_lower_qr_quantile = None
+        best_upper_qr_quantile= None
         results_list = []
 
         for l_alpha in qr_lq_grid:
@@ -629,8 +637,8 @@ class XGBoostCQR(XGBoostQuantileRegressor):
                 # store info of models with the best CWC - need to check what is actually needed to save
                 if cwc < best_cwc:
                     best_cwc = cwc
-                    self.lower_qr_quantile = l_alpha
-                    self.upper_qr_quantile = u_alpha
+                    best_lower_qr_quantile = l_alpha
+                    best_upper_qr_quantile = u_alpha
                     # best_models = deepcopy(models)
                     best_conformity = (conformity_score_low, conformity_score_high)
         # self.models = best_models
@@ -639,9 +647,9 @@ class XGBoostCQR(XGBoostQuantileRegressor):
         
         print(f"best CWC: {best_cwc}")
         print(f"best coverage: {coverage}")
-        print(f"QR Alphas: [{self.lower_qr_quantile}, {self.upper_qr_quantile}]")
+        print(f"QR Alphas: [{best_lower_qr_quantile}, {best_upper_qr_quantile}]")
         print(self.grid_search_alpha_results)
-        return self.lower_qr_quantile, self.upper_qr_quantile, self.conformity_score
+        return best_lower_qr_quantile, best_upper_qr_quantile, self.conformity_score
         
 
     def fit(self, X_train, y_train, x_calibration, y_calibration, validation_size=0.25,
@@ -716,24 +724,30 @@ class XGBoostCQR(XGBoostQuantileRegressor):
 
     def save(self, filepath):
         """Saves the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             pickle.dump({
                 "models": {name: model.save_raw() for name, model in self.models.items()},
                 "conformity_score": self.conformity_score,
                 "lower_qr_quantile": self.lower_qr_quantile,
                 "upper_qr_quantile": self.upper_qr_quantile,
-                "alpha": self.alpha
+                "alpha": self.alpha,
+                "model_params": self.model_params,
+                "num_boost_round": self.num_boost_round,
+                "early_stopping_rounds": self.early_stopping_rounds
             }, f)
         print(f"Model saved to {filepath}")
  
     def load(self, filepath):
         """Loads the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             data = pickle.load(f)
             self.conformity_score = data["conformity_score"]
             self.lower_qr_quantile = data["lower_qr_quantile"]
             self.upper_qr_quantile = data["upper_qr_quantile"]
             self.alpha = data["alpha"]
+            self.model_params = data.get("model_params", {})
+            self.num_boost_round = data.get("num_boost_round", 100)
+            self.early_stopping_rounds = data.get("early_stopping_rounds")
             self.models = {}
             for name, raw_model in data["models"].items():
                 booster = xgb.Booster()
@@ -743,7 +757,7 @@ class XGBoostCQR(XGBoostQuantileRegressor):
 
 
 class XGBoostBootstrap(PredictionIntervalResults):
-    def __init__(self, model_params:dict, num_boost_round=100, method="bootstrap", alpha=90) -> None:
+    def __init__(self, model_params:dict=None, num_boost_round=100, method="bootstrap", alpha=90) -> None:
         """
         The constructor initialises the BootstrapStrategy object with the model, training, and testing data, as well as the target column name.
         For creating a Bootstrapped PI around XGBoost regressor model
@@ -754,7 +768,7 @@ class XGBoostBootstrap(PredictionIntervalResults):
             alpha =  The confidence level for the prediction interval (default is 90).
         -----------.
         """
-        self.model_params = model_params
+        self.model_params = model_params if model_params is not None else {}
         self.num_boost_round = num_boost_round
         self.method = method
         self.alpha = alpha
@@ -836,29 +850,45 @@ class XGBoostBootstrap(PredictionIntervalResults):
         }
 
     def save(self, filepath):
-        """Saves the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'wb') as f:
+        """Saves the model and relevant metadata."""
+        with open(filepath, "wb") as f:
+            # Convert models to raw bytes for saving
+            bootstrap_raw = [model.save_raw() for model in self.bootstrap_models_list] if self.bootstrap_models_list else None
+            monte_carlo_raw = [model.save_raw() for model in self.monte_carlo_models_list] if self.monte_carlo_models_list else None
+            
             pickle.dump({
-                "models": {name: model.save_raw() for name, model in self.models.items()},
-                "conformity_score": self.conformity_score,
-                "lower_qr_quantile": self.lower_qr_quantile,
-                "upper_qr_quantile": self.upper_qr_quantile,
-                "alpha": self.alpha
+                "model_params": self.model_params,
+                "num_boost_round": self.num_boost_round,
+                "method": self.method,
+                "alpha": self.alpha,
+                "model_params": self.model_params,
+                "num_boost_round": self.num_boost_round,
+                "bootstrap_models": bootstrap_raw,
+                "monte_carlo_models": monte_carlo_raw
             }, f)
         print(f"Model saved to {filepath}")
 
     def load(self, filepath):
-        """Loads the model, conformity scores, and relevant metadata."""
-        with open(filepath, 'rb') as f:
+        """Loads the model and relevant metadata."""
+        with open(filepath, "rb") as f:
             data = pickle.load(f)
-            self.conformity_score = data["conformity_score"]
-            self.lower_qr_quantile = data["lower_qr_quantile"]
-            self.upper_qr_quantile = data["upper_qr_quantile"]
+            self.model_params = data["model_params"]
+            self.num_boost_round = data["num_boost_round"]
+            self.method = data["method"]
             self.alpha = data["alpha"]
-            self.models = {}
-            for name, raw_model in data["models"].items():
-                booster = xgb.Booster()
-                booster.load_model(raw_model)
-                self.models[name] = booster
+            
+            self.bootstrap_models_list = []
+            if data["bootstrap_models"]:
+                for raw_model in data["bootstrap_models"]:
+                    booster = xgb.Booster()
+                    booster.load_model(bytearray(raw_model))
+                    self.bootstrap_models_list.append(booster)
+            
+            self.monte_carlo_models_list = []
+            if data["monte_carlo_models"]:
+                for raw_model in data["monte_carlo_models"]:
+                    booster = xgb.Booster()
+                    booster.load_model(bytearray(raw_model))
+                    self.monte_carlo_models_list.append(booster)
         print(f"Model loaded from {filepath}")
 
