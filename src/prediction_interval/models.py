@@ -723,7 +723,7 @@ class XGBoostCQR(XGBoostQuantileRegressor):
         with open(filepath, "wb") as f:
             pickle.dump({
                 "models": {name: model.save_raw() for name, model in self.models.items()},
-                "conformity_score": self.conformity_score,
+                "conformity_score": (float(self.conformity_score[0]), float(self.conformity_score[1])),
                 "lower_qr_quantile": self.lower_qr_quantile,
                 "upper_qr_quantile": self.upper_qr_quantile,
                 "alpha": self.alpha,
